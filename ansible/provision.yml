@@ -1,0 +1,68 @@
+--- # Ansible Playbook to provision Nutanix VMs with setup scripts and configurations
+# Playbook name
+- name: Provision Nutanix VMs (client and gateway)
+# Target all hosts in the inventory
+  hosts: all
+# Run tasks with sudo privileges
+  become: yes
+  vars:
+    # Path to setup.sh script
+    setup_script: scripts/entity/setup.sh
+    # Path to env.sh script
+    env_script: scripts/entity/env.sh
+    # Path to gencerts.sh script
+    gencerts_script: scripts/entity/gencerts.sh
+    # SSH username for all hosts
+    ansible_user: root
+    # SSH password for all hosts
+    ansible_password: password
+  tasks:
+    # Copy setup.sh to remote host
+    - name: Copy setup.sh
+      copy:
+        # Source path on control node
+        src: "{{ setup_script }}"
+        # Destination path on remote host
+        dest: /tmp/setup.sh
+        # Make script executable
+        mode: '0755'
+
+    # Copy env.sh to remote host
+    - name: Copy env.sh
+      copy:
+        # Source path on control node
+        src: "{{ env_script }}"
+        # Destination path on remote host
+        dest: /tmp/env.sh
+        # Standard file permissions
+        mode: '0644'
+
+    # Copy gencerts.sh to remote host
+    - name: Copy gencerts.sh
+      copy:
+        # Source path on control node
+        src: "{{ gencerts_script }}"
+        # Destination path on remote host
+        dest: /tmp/gencerts.sh
+        # Make script executable
+        mode: '0755'
+
+    # Copy swanctl.conf for each host
+    - name: Copy swanctl.conf
+      copy:
+        # Source config file for this host
+        src: "misc/conf/{{ inventory_hostname }}/swanctl.conf"
+        # Destination path on remote host
+        dest: /etc/swanctl/swanctl.conf
+        # Standard file permissions
+        mode: '0644'
+
+    # Set variables and run setup script
+    - name: Set hostname and role, run setup.sh
+      shell: |
+        export HOSTNAME={{ inventory_hostname }}
+        export ROLE={{ hostvars[inventory_hostname]['role'] | default('client') }}
+        bash /tmp/setup.sh
+      args:
+        # Use bash shell for the command
+        executable: /bin/bash

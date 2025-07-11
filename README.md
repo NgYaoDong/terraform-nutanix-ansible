@@ -1,4 +1,6 @@
-# terraform-nutanix
+# terraform-nutanix-ansible
+
+[![GitHub](https://img.shields.io/badge/GitHub-NgYaoDong%2Fterraform--nutanix--ansible-blue?logo=github)](https://github.com/NgYaoDong/terraform-nutanix-ansible)
 
 This project automates the deployment of a network of Strongswan VPNs in a Nutanix environment using Terraform. It provisions client and gateway VMs, configures networking, and sets up VPN connectivity.
 
@@ -14,14 +16,20 @@ This project automates the deployment of a network of Strongswan VPNs in a Nutan
 - Nutanix Element endpoint and credentials
 - Terraform >= 1.0
 - Nutanix Terraform Provider (version 2.2.0 recommended)
+- Ansible for post-deployment provisioning
 - SSH access to VMs
 
 ## Usage
 
 1. **Clone the repository**
 
+   ```bash
+   git clone https://github.com/NgYaoDong/terraform-nutanix-ansible.git
+   cd terraform-nutanix-ansible
+   ```
+
 2. **Set up the CA**
-   
+
    Follow the instructions in [`scripts/ca/`](scripts/ca/) to set up the CA properly.
 
 3. **Configure variables**
@@ -49,9 +57,9 @@ This project automates the deployment of a network of Strongswan VPNs in a Nutan
 4. **Deployment preparation**
 
    - The [`setup.sh`](scripts/entity/setup.sh) script in [`scripts/entity`](scripts/entity/) is automatically copied and executed on each VM to configure Strongswan and VPN certificates.
-   - Ensure `env.sh` in [`scripts/entity`](scripts/entity/) is configured with the correct environment variables for certificate setup.
+   - Create an `env.sh` file in [`scripts/entity`](scripts/entity/) with the correct environment variables for certificate setup.
   
-   Example:
+   Example configuration for `env.sh`:
 
    ```bash
    # Environment variables for setup.sh
@@ -71,13 +79,26 @@ This project automates the deployment of a network of Strongswan VPNs in a Nutan
    ca_vm_password="<your-ca-vm-password>"
    ```
 
-5. **Initialize and apply Terraform**
+5. **Initialize and apply Terraform to spin up the VMs**
 
    ```bash
    terraform init
    terraform apply
    ```
 
+6. **Provision the VMs using Ansible**
+
+    After the VMs are created, use Ansible to provision them with the necessary configurations:
+  
+    ```bash
+   ansible-playbook -i ansible/terraform_inventory.yml ansible/provision.yml
+    ```
+
+7. **Post-deployment**
+
+    After the VMs are up, you can access their console in Nutanix Prism Element with the username: `root` and password: `password`.
+
+    The Strongswan VPN should be automatically configured based on the scripts provided.
 
 ## Variables
 
@@ -95,14 +116,18 @@ See [`variables.tf`](variables.tf) for all configurable variables:
 - [`locals.tf`](locals.tf) – Local values for dynamic resource creation
 - [`vms.tf`](vms.tf) – VM resource definitions
 - [`variables.tf`](variables.tf) – Input variables
-- [`terraform.tfvars`](terraform.tfvars) – User-specific variable values
+- [`terraform.tfvars`](terraform.tfvars) – User-specific variable values (create this file)
+- [`ansible/`](ansible/) – Ansible configuration files
+  - [`provision.yml`](ansible/provision.yml) – Ansible playbook for VM provisioning
+  - [`terraform_inventory.yml`](ansible/terraform_inventory.yml) – Dynamic inventory configuration
 - [`scripts/`](scripts/) – Shell scripts for VM provisioning
   - [`README.md`](scripts/README.md)
   - [`ca/`](scripts/ca/) – Certificate Authority scripts
+    - [`README.md`](scripts/ca/README.md)
     - [`ca_csr_watcher.sh`](scripts/ca/ca_csr_watcher.sh)
     - [`genca.sh`](scripts/ca/genca.sh)
   - [`entity/`](scripts/entity/) – Entity (client/gateway) setup scripts
-    - [`env.sh`](scripts/entity/env.sh)
+    - [`env.sh`](scripts/entity/env.sh) – Environment variables (create this file)
     - [`gencerts.sh`](scripts/entity/gencerts.sh)
     - [`setup.sh`](scripts/entity/setup.sh)
 - [`misc/`](misc/) – Miscellaneous configuration and reference files
@@ -121,6 +146,8 @@ See [`variables.tf`](variables.tf) for all configurable variables:
 
 - Sensitive data (passwords, etc.) should not be committed to version control. See [`.gitignore`](.gitignore) for excluded files.
 - The [`setup.sh`](scripts/entity/setup.sh) script expects an `env.sh` file with required environment variables.
+- Create your own `terraform.tfvars` file based on the example configuration above - this file is excluded from version control for security.
+- Create your own `env.sh` file in the `scripts/entity/` directory based on the example configuration above - this file is also excluded from version control for security.
 
 ## References
 
