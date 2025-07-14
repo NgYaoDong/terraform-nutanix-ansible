@@ -7,11 +7,11 @@
   become: yes
   vars:
     # Path to setup.sh script
-    setup_script: scripts/entity/setup.sh
+    setup_script: setup.sh
     # Path to env.sh script
-    env_script: scripts/entity/env.sh
+    env_script: env.sh
     # Path to gencerts.sh script
-    gencerts_script: scripts/entity/gencerts.sh
+    gencerts_script: gencerts.sh
     # SSH username for all hosts
     ansible_user: root
     # SSH password for all hosts
@@ -51,7 +51,7 @@
     - name: Copy swanctl.conf
       copy:
         # Source config file for this host
-        src: "misc/conf/{{ inventory_hostname }}/swanctl.conf"
+        src: "conf/{{ inventory_hostname }}/swanctl.conf"
         # Destination path on remote host
         dest: /etc/swanctl/swanctl.conf
         # Standard file permissions

@@ -10,6 +10,3 @@ variable "nutanix_image_name" { type = string }           # Name of the VM image
 
 variable "num_clients" { type = number }  # Number of client VMs to create
 variable "num_gateways" { type = number } # Number of gateway VMs to create
-
-# variable "ssh_username" { type = string } # SSH username for VMs
-# variable "ssh_password" { type = string } # SSH password for VMs

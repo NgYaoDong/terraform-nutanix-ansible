@@ -7,8 +7,9 @@ resource "nutanix_virtual_machine" "client" {
   num_sockets          = 1                         # Number of sockets
   memory_size_mib      = 512                       # Memory in MiB
 
-  categories = {
-    role = "client"
+  categories {
+    name = "role"
+    value = "client" # Category for client VMs
   }
 
   depends_on = [
@@ -44,8 +45,9 @@ resource "nutanix_virtual_machine" "gateway" {
   num_sockets          = 1                          # Number of sockets
   memory_size_mib      = 512                        # Memory in MiB
 
-  categories = {
-    role = "gateway"
+  categories {
+    name = "role"
+    value = "gateway" # Category for gateway VMs
   }
 
   disk_list {

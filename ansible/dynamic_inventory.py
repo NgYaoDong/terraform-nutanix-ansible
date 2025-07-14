@@ -22,12 +22,12 @@ except json.JSONDecodeError as e:
 
 # Extract IP addresses
 clients = tf_out['client_ips']['value']
-gateway_internet_ips = tf_out['gateway_internet_ips']['value']
+gateways = tf_out['gateway_ips']['value']
 
 # Build Ansible inventory
 inventory = {
     'client': {
-        'hosts': list(clients.values()),
+        'hosts': list(clients.keys()),  # Use VM names as inventory_hostname
         'vars': {
             'ansible_user': 'root',
             'ansible_password': 'password',
@@ -35,7 +35,7 @@ inventory = {
         }
     },
     'gateway': {
-        'hosts': list(gateway_internet_ips.values()),  # Use internet IPs for gateway access
+        'hosts': list(gateways.keys()),  # Use VM names as inventory_hostname
         'vars': {
             'ansible_user': 'root',
             'ansible_password': 'password',
@@ -49,15 +49,17 @@ inventory = {
 
 # Add host-specific variables
 for name, ip in clients.items():
-    inventory['_meta']['hostvars'][ip] = {
+    inventory['_meta']['hostvars'][name] = {
         'vm_name': name,
-        'role': 'client'
+        'role': 'client',
+        'ansible_host': ip
     }
 
-for name, ip in gateway_internet_ips.items():
-    inventory['_meta']['hostvars'][ip] = {
+for name, ip in gateways.items():
+    inventory['_meta']['hostvars'][name] = {
         'vm_name': name,
-        'role': 'gateway'
+        'role': 'gateway',
+        'ansible_host': ip
     }
 
 # Output inventory as JSON
