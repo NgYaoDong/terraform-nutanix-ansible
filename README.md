@@ -2,103 +2,104 @@
 
 [![GitHub](https://img.shields.io/badge/GitHub-NgYaoDong%2Fterraform--nutanix--ansible-blue?logo=github)](https://github.com/NgYaoDong/terraform-nutanix-ansible)
 
-This project automates the deployment of a network of Strongswan VPNs in a Nutanix environment using Terraform. It provisions client and gateway VMs, configures networking, and sets up VPN connectivity.
+Automate deployment of Strongswan VPN clients and gateways on Nutanix using Terraform and Ansible. This project provisions VMs, configures networking, and sets up VPN connectivity with post-deployment scripts.
+
+---
 
 ## Features
 
-- Deploys multiple client and gateway VMs on Nutanix clusters
-- Configures static IPs for all VMs
-- Sets up Strongswan VPN automatically via provisioning scripts
-- Uses custom shell scripts for post-deployment configuration
+- Deploy multiple client and gateway VMs on Nutanix clusters
+- Assign static IPs to all VMs
+- Automated Strongswan VPN setup via provisioning scripts
+- Custom shell scripts for post-deployment configuration
+
+---
 
 ## Prerequisites
 
-- Nutanix Element endpoint and credentials
+- Nutanix Prism Element endpoint and credentials
 - Terraform >= 1.0
-- Nutanix Terraform Provider (version 2.2.0 recommended)
-- Ansible for post-deployment provisioning
+- Nutanix Terraform Provider (v2.2.0 recommended)
+- Ansible (for post-deployment provisioning)
 - SSH access to VMs
 
-## Usage
+---
 
-1. **Clone the repository**
+## Quickstart
 
-   ```bash
-   git clone https://github.com/NgYaoDong/terraform-nutanix-ansible.git
-   cd terraform-nutanix-ansible
-   ```
+### 1. Clone the repository
 
-2. **Set up the CA**
+```bash
+git clone https://github.com/NgYaoDong/terraform-nutanix-ansible.git
+cd terraform-nutanix-ansible
+```
 
-   Follow the instructions in [`scripts/ca/`](scripts/ca/) to set up the CA properly.
+### 2. Set up the Certificate Authority (CA)
 
-3. **Configure variables**
+See [`scripts/ca/README.md`](scripts/ca/README.md) for instructions.
 
-   Create a `terraform.tfvars` file with your Nutanix environment details and desired VM counts.
+### 3. Configure variables
 
-   Example:
+Create a `terraform.tfvars` file with your Nutanix details and desired VM counts:
 
-   ```hcl
-   nutanix_endpoint = "<your-nutanix-endpoint>"     # Prism Element endpoint
-   nutanix_username = "<your-nutanix-username>"     # Prism Element username
-   nutanix_password = "<your-nutanix-password>"     # Prism Element password
-   nutanix_cluster_name = "strongswan-terraform"    # Name of the Nutanix cluster
-   nutanix_internet_subnet_name = "Internet"        # Name of the internet subnet
-   nutanix_intranet_subnet_name = "Intranet"        # Name of the intranet subnet
-   nutanix_image_name = "strongswan-alpine"         # Name of the VM image to use
-   num_clients  = 2                                 # Number of client VMs to create
-   num_gateways = 2                                 # Number of gateway VMs to create
-   ssh_username = "root"                            # SSH username for client/gateway VMs
-   ssh_password = "password"                        # SSH password for client/gateway VMs
-   ```
+```hcl
+nutanix_endpoint             = "<your-nutanix-endpoint>" # Prism Element endpoint
+nutanix_username             = "<your-nutanix-username>" # Prism Element username
+nutanix_password             = "<your-nutanix-password>" # Prism Element password
+nutanix_cluster_name         = "strongswan-terraform"    # Name of the Nutanix cluster
+nutanix_internet_subnet_name = "Internet"                # Name of the internet subnet
+nutanix_intranet_subnet_name = "Intranet"                # Name of the intranet subnet
+nutanix_image_name           = "strongswan-alpine"       # Name of the VM image to use
+num_clients                  = 2                         # Number of client VMs to create
+num_gateways                 = 2                         # Number of gateway VMs to create
+```
 
-   Edit the `client_ips`, `gateway_internet_ips` and `gateway_intranet_ips` in the [`locals.tf`](locals.tf) file to configure your desired IP address range.
+Edit `client_ips`, `gateway_internet_ips`, and `gateway_intranet_ips` in [`locals.tf`](locals.tf) to set your IP ranges.
 
-4. **Deployment preparation**
+### 4. Prepare deployment scripts
 
-   - The [`setup.sh`](scripts/entity/setup.sh) script in [`scripts/entity`](scripts/entity/) is automatically copied and executed on each VM to configure Strongswan and VPN certificates.
-   - Create an `env.sh` file in [`scripts/entity`](scripts/entity/) with the correct environment variables for certificate setup.
-  
-   Example configuration for `env.sh`:
+- [`setup.sh`](scripts/entity/setup.sh) is copied and executed on each VM for Strongswan and certificate setup.
+- Create `env.sh` in [`scripts/entity/`](scripts/entity/) with required environment variables:
 
-   ```bash
-   # Environment variables for setup.sh
-   deployment_username="<your-ca-vm-username>"
-   ca_vm_ip="<your-ca-vm-endpoint>"
+```bash
+# Environment variables for setup.sh
+deployment_username="<your-ca-vm-username>"
+ca_vm_ip="<your-ca-vm-endpoint>"
 
-   local_csr_path="/tmp/${HOSTNAME}Req.pem"
-   remote_csr_path="/tmp/csr_inbox/${HOSTNAME}Req.pem"
+local_csr_path="/tmp/${HOSTNAME}Req.pem"
+remote_csr_path="/tmp/csr_inbox/${HOSTNAME}Req.pem"
 
-   local_entity_crt_path="/etc/swanctl/x509/${HOSTNAME}Cert.pem"
-   remote_entity_crt_path="/tmp/signed/${HOSTNAME}Cert.pem"
+local_entity_crt_path="/etc/swanctl/x509/${HOSTNAME}Cert.pem"
+remote_entity_crt_path="/tmp/signed/${HOSTNAME}Cert.pem"
 
-   local_ca_crt_path="/etc/swanctl/x509ca/caCert.pem"
-   remote_ca_crt_path="/tmp/ca/caCert.pem"
+local_ca_crt_path="/etc/swanctl/x509ca/caCert.pem"
+remote_ca_crt_path="/tmp/ca/caCert.pem"
 
-   ssh_key_path="$HOME/.ssh/id_rsa_entity"
-   ca_vm_password="<your-ca-vm-password>"
-   ```
+ssh_key_path="$HOME/.ssh/id_rsa_entity"
+ca_vm_password="<your-ca-vm-password>"
+```
 
-5. **Initialize and apply Terraform to spin up the VMs**
+### 5. Deploy VMs with Terraform
 
-   ```bash
-   terraform init
-   terraform apply
-   ```
+```bash
+terraform init
+terraform apply
+```
 
-6. **Provision the VMs using Ansible**
+### 6. Provision VMs with Ansible
 
-    After the VMs are created, use Ansible to provision them with the necessary configurations:
-  
-    ```bash
-   ansible-playbook -i ansible/terraform_inventory.yml ansible/provision.yml
-    ```
+After VMs are created, run:
 
-7. **Post-deployment**
+```bash
+bash run_ansible.sh
+```
 
-    After the VMs are up, you can access their console in Nutanix Prism Element with the username: `root` and password: `password`.
+### 7. Post-deployment
 
-    The Strongswan VPN should be automatically configured based on the scripts provided.
+- Access VM consoles in Nutanix Prism Element (username: `root`, password: `password`)
+- Strongswan VPN is auto-configured via scripts
+
+---
 
 ## Variables
 
@@ -108,6 +109,8 @@ See [`variables.tf`](variables.tf) for all configurable variables:
 - `nutanix_cluster_name`, `nutanix_internet_subnet_name`, `nutanix_intranet_subnet_name`, `nutanix_image_name`
 - `num_clients`, `num_gateways`
 - `ssh_username`, `ssh_password`
+
+---
 
 ## File Structure
 
@@ -119,7 +122,7 @@ See [`variables.tf`](variables.tf) for all configurable variables:
 - [`terraform.tfvars`](terraform.tfvars) – User-specific variable values (create this file)
 - [`ansible/`](ansible/) – Ansible configuration files
   - [`provision.yml`](ansible/provision.yml) – Ansible playbook for VM provisioning
-  - [`terraform_inventory.yml`](ansible/terraform_inventory.yml) – Dynamic inventory configuration
+  - [`dynamic_inventory.py`](ansible/dynamic_inventory.py) – Example custom inventory script
 - [`scripts/`](scripts/) – Shell scripts for VM provisioning
   - [`README.md`](scripts/README.md)
   - [`ca/`](scripts/ca/) – Certificate Authority scripts
@@ -142,13 +145,16 @@ See [`variables.tf`](variables.tf) for all configurable variables:
     - [`main.tf`](misc/ref/main.tf)
     - [`README.md`](misc/ref/README.md)
 
+---
+
 ## Notes
 
-- Sensitive data (passwords, etc.) should not be committed to version control. See [`.gitignore`](.gitignore) for excluded files.
-- The [`setup.sh`](scripts/entity/setup.sh) script expects an `env.sh` file with required environment variables.
-- Create your own `terraform.tfvars` file based on the example configuration above - this file is excluded from version control for security.
-- Create your own `env.sh` file in the `scripts/entity/` directory based on the example configuration above - this file is also excluded from version control for security.
+- Sensitive data (passwords, etc.) should not be committed. See [`.gitignore`](.gitignore).
+- [`setup.sh`](scripts/entity/setup.sh) expects an `env.sh` file with required environment variables.
+- Create your own `terraform.tfvars` and `env.sh` files (excluded from version control).
+
+---
 
 ## References
 
-- See [`scripts/README.md`](scripts/README.md) and [`misc/ref/README.md`](misc/ref/README.md) for more details on scripts and reference materials.
+- See [`scripts/README.md`](scripts/README.md) and [`misc/ref/README.md`](misc/ref/README.md) for more details.
