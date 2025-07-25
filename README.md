@@ -23,11 +23,22 @@ Automate deployment of Strongswan VPN clients and gateways on Nutanix using Terr
 - Ansible (for post-deployment provisioning)
 - SSH access to VMs
 
+Additional setup for VMs:
+
+Install these services in the VMs first, export them as an OVF/OVA file, then upload the .vmdk of these VMs to Nutanix Prism Element under Image Configuration.
+Note: Ensure that your VMs have the correct number of network adapters and that they are all set to `bridged` before exporting them.
+
+- Deployment/CA VM: Terraform, Nutanix provider for Terraform, sftp server (openssh-server), strongswan pki, inotify-tools, python3, pip, ansible (installed using pip), sshpass
+  
+  - Deployment/CA VM is to be set up manually in Nutanix first.
+
+- VPN VMs: strongswan, bash, sshpass, sftp client (openssh-client), python3
+
 ---
 
 ## Quickstart
 
-### 1. Clone the repository
+### 1. Clone the repository into the Deployment/CA VM
 
 ```bash
 git clone https://github.com/NgYaoDong/terraform-nutanix-ansible.git
